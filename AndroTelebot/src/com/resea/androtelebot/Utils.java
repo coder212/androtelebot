@@ -42,7 +42,8 @@ public class Utils {
 	
 		try {
 			Log.d("MU", "kirim data");
-			sendData(TOKEN+"/"+SEND_MESSAGE, nameValuePairs);
+			String result = sendData(TOKEN+"/"+SEND_MESSAGE, nameValuePairs);
+			Log.d("MU", "result for sending is "+result);
 		} catch (ClientProtocolException e) {
 			// TODOs Auto-generated catch block
 			e.printStackTrace();
