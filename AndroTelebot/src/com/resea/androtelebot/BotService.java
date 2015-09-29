@@ -32,6 +32,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Service;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -48,9 +49,31 @@ public class BotService extends Service {
 	static Context context;
 	ArrayList<String> list = new ArrayList<>();
 	String[] load = { "Kata_Row" };
+	String[] loadup = {"Updates_id"};
+	int update_id;
+	int update_idc = 0; 
 	int message_id = 0;
 	int chat_id = 0;
 	String text = "";
+	
+	private void setUpdate_idc(){
+		Cursor cursor = context
+				.getContentResolver()
+				.query(Uri
+						.parse("content://com.resea.androtelebot.updateprovider/element"),
+						loadup, null, null, null);
+		if(cursor != null && cursor.getCount() > 0){
+			cursor.moveToLast();
+			String updates_id = cursor.getString(cursor
+					.getColumnIndex("Updates_id"));
+			update_idc = Integer.parseInt(updates_id);
+		}else{
+			update_idc = 0;
+		}
+		
+		
+		cursor.close();
+	}
 
 	private static String healthCodeToString(int health) {
 		switch (health) {
@@ -143,13 +166,33 @@ public class BotService extends Service {
 			s += technologyString + "\n";
 			s += temperatureString + "\n";
 			s += voltageString;
-			Utils.sendMessage(chat_id, message_id, s);
+			try {
+				
+				Log.d("MU", "string yang akan dikirim "+s);
+				String r = Utils.sendMessage(chat_id, message_id, s);
+				Log.d("MU", r);
+			} catch (ClientProtocolException e) {
+				// TODOs Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODOs Auto-generated catch block
+				e.printStackTrace();
+			}
 			// mTextView.setText(s);
 			// Note: using a StringBuilder object would have been more efficient
 		} else {
 			String s = "No battery information";
 			Log.i("MU", s);
-			Utils.sendMessage(chat_id, message_id, s);
+			try {
+				String r = Utils.sendMessage(chat_id, message_id, s);
+				Log.d("MU", r);
+			} catch (ClientProtocolException e) {
+				// TODOs Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODOs Auto-generated catch block
+				e.printStackTrace();
+			}
 
 		}
 	}
@@ -188,6 +231,7 @@ public class BotService extends Service {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		// TODOs Auto-generated method stub
 		context = BotService.this;
+		setUpdate_idc();
 		new GetUpdates().execute("latian");
 		return (START_STICKY);
 	}
@@ -197,12 +241,11 @@ public class BotService extends Service {
 		@Override
 		protected String doInBackground(String... arg0) {
 			// TODOs Auto-generated method stub
-			int updates_id = 0;
 			String res = "";
 			Log.d("MU", "load this");
 			try {
 				Log.d("MU", "load this");
-				res = Utils.getUpdates(updates_id++);
+				res = Utils.getUpdates(update_id++);
 				Log.d("MU", res);
 				JSONObject obj = new JSONObject(res);
 				String arrayString = obj.getString("result");
@@ -219,49 +262,69 @@ public class BotService extends Service {
 					// message.getJSONObject("chat").getString("username");
 					// Log.d("MU","username "+username);
 					Log.d("MU", "get the text messages");
+					
+					update_id = jArray.getJSONObject(i).getInt("update_id");
+					if(update_id > update_idc){
+						if (message_string.contains("\"text\"")) {
+							text = message.getString("text");
+							Log.d("MU", "the text is " + text);
+						} else {
+							String sticker = message.getString("sticker");
+							Log.d("Mu", sticker);
+						}
+						message_id = message.getInt("message_id");
+						Log.d("MU", "message id " + message_id);
+						if (text.contains("siapa lo")) {
+							String text_replay = "aku adalah seorang muslim jika aku sendirian dan komunis jika aku dalam kerumunan karena Allah berfirman setan ada dalam kerumunan (Tan Malaka)";
+							Log.d("MU", "sending " + text_replay);
+							String ut = Utils.sendMessage(chat_id, message_id, text_replay);
+							Log.d("MU", ut);
+						} else if (text.contains("mulai")) {
+							Cursor cursor = context
+									.getContentResolver()
+									.query(Uri
+											.parse("content://com.resea.androtelebot.databaseprovider/element"),
+											load, null, null, null);
+							cursor.moveToFirst();
+							do {
+								String kata = cursor.getString(cursor
+										.getColumnIndex("Kata_Row"));
+								list.add(kata);
+							} while (cursor.moveToNext());
+							cursor.close();
+							Random rnd = new Random();
+							int indexrand = rnd.nextInt(list.size());
+							String text_replay = list.get(indexrand);
+							indexrand = rnd.nextInt(list.size());
+							text_replay += list.get(indexrand);
+							indexrand = rnd.nextInt(list.size());
+							text_replay += list.get(indexrand);
+							Log.d("MU", "sending");
+							Utils.sendMessage(chat_id, message_id, text_replay);
+						} else if (text.contains("you")) {
 
-					if (message_string.contains("\"text\"")) {
-						text = message.getString("text");
-						Log.d("MU", "the text is " + text);
-					} else {
-						String sticker = message.getString("sticker");
-						Log.d("Mu", sticker);
+							String s = Utils.sendMessage(chat_id, message_id,
+									"penasaran kok ngga pernah ngirim");
+							Log.d("MU", s);
+						}else if(text.contains("info")){
+							showBatteryInfo();
+						}
+						
+					}else {
+						
+						Log.d("MU", "update id sama dengan yang tadi hehe");
 					}
-					message_id = message.getInt("message_id");
-					Log.d("MU", "message id " + message_id);
-					if (text.contains("siapa lo")) {
-						String text_replay = "aku adalah seorang muslim jika aku sendirian dan komunis jika aku dalam kerumunan karena Allah berfirman setan ada dalam kerumunan (Tan Malaka)";
-						Log.d("MU", "sending " + text_replay);
-						Utils.sendMessage(chat_id, message_id, text_replay);
-					} else if (text.contains("mulai")) {
-						Cursor cursor = context
-								.getContentResolver()
-								.query(Uri
-										.parse("content://com.resea.androtelebot.databaseprovider/element"),
-										load, null, null, null);
-						cursor.moveToFirst();
-						do {
-							String kata = cursor.getString(cursor
-									.getColumnIndex("Kata_Row"));
-							list.add(kata);
-						} while (cursor.moveToNext());
-						cursor.close();
-						Random rnd = new Random();
-						int indexrand = rnd.nextInt(list.size());
-						String text_replay = list.get(indexrand);
-						indexrand = rnd.nextInt(list.size());
-						text_replay += list.get(indexrand);
-						indexrand = rnd.nextInt(list.size());
-						text_replay += list.get(indexrand);
-						Log.d("MU", "sending");
-						Utils.sendMessage(chat_id, message_id, text_replay);
-					} else if (text.contains("you")) {
+					
+					ContentValues values = new ContentValues();
+					values.put("Updates_id", String.valueOf(update_id));
 
-						Utils.sendMessage(chat_id, message_id,
-								"penasaran kok ngga pernah ngirim");
-					}else if(text.contains("info")){
-						showBatteryInfo();
-					}
+					context
+							.getContentResolver()
+							.insert(Uri
+									.parse("content://com.resea.androtelebot.updateprovider/element"),
+									values);
+
+					
 				}
 			} catch (ClientProtocolException e) {
 				// TODOs Auto-generated catch block

@@ -27,6 +27,10 @@
             android:name="com.resea.androtelebot.BotProvider"
             android:authorities="com.resea.androtelebot.databaseprovider"
             android:exported="true" />
+         <provider
+            android:name="com.resea.androtelebot.UpdateProvider"
+            android:authorities="com.resea.androtelebot.updateprovider"
+            android:exported="true" />
 
         <service
             android:name="com.resea.androtelebot.BotService"

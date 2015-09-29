@@ -13,9 +13,13 @@ public class DatabaseBot extends SQLiteOpenHelper {
 	public final String KATA_ROW = "Kata_Row";
 	public final String KATA_TABLE = "Kata_Random";
 	
-	private final String CREATE_KATA_TABLE = "create table "+KATA_TABLE+"("+ID+" integer primary key,"+KATA_ROW+" text not null);";
-	private final String UPDATE_TABLE_KATA = "drop table if exists "+KATA_TABLE;
+	public final String UPDATES_ID_ROW = "Updates_id";
+	public final String UPDATES_ID_TABLE = "Updates_id_table";
 	
+	private final String CREATE_KATA_TABLE = "create table "+KATA_TABLE+"("+ID+" integer primary key,"+KATA_ROW+" text not null);";
+	private final String CREATE_UPDATES_ID_TABLE = "create table "+UPDATES_ID_TABLE+"("+ID+" integer primary key,"+UPDATES_ID_ROW+" text not null);";
+	private final String UPDATE_TABLE_KATA = "drop table if exists "+KATA_TABLE;
+	private final String UPDATE_UPDATES_ID_TABLE = "drop table if exists "+UPDATES_ID_TABLE;
 	
 
 	public DatabaseBot(Context context) {
@@ -29,6 +33,7 @@ public class DatabaseBot extends SQLiteOpenHelper {
 	public void onCreate(SQLiteDatabase db) {
 		// TODOs Auto-generated method stub
 		db.execSQL(CREATE_KATA_TABLE);
+		db.execSQL(CREATE_UPDATES_ID_TABLE);
 	}
 
 
@@ -37,6 +42,7 @@ public class DatabaseBot extends SQLiteOpenHelper {
 	public void onUpgrade(SQLiteDatabase db, int oldDb, int newDb) {
 		// TODOs Auto-generated method stub
 		db.execSQL(UPDATE_TABLE_KATA);
+		db.execSQL(UPDATE_UPDATES_ID_TABLE);
 		onCreate(db);
 	}
 

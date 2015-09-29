@@ -18,7 +18,7 @@ import android.util.Log;
 
 public class Utils {
 	
-	public static final String URL_TELEGRAM = "http://api.telegram.org/bot";
+	public static final String URL_TELEGRAM = "https://api.telegram.org/bot";
 	public static final String TOKEN = "YOUR TOKEN HERE";
 	public static final String SEND_MESSAGE = "sendMessage";
 	public static final String GET_UPDATES = "getUpdates";
@@ -33,24 +33,12 @@ public class Utils {
 		
 	}
 	
-	public static void sendMessage(int chat_id, int message_id, String message){
+	public static String sendMessage(int chat_id, int message_id, String message) throws ClientProtocolException, IOException{
 		nameValuePairs = new ArrayList<NameValuePair>(2);
 		nameValuePairs.add(new BasicNameValuePair("chat_id", Integer.toString(chat_id)));
 		nameValuePairs.add(new BasicNameValuePair("text", message));
 		nameValuePairs.add(new BasicNameValuePair("reply_to_message_id", Integer.toString(message_id)));
-		
-	
-		try {
-			Log.d("MU", "kirim data");
-			String result = sendData(TOKEN+"/"+SEND_MESSAGE, nameValuePairs);
-			Log.d("MU", "result for sending is "+result);
-		} catch (ClientProtocolException e) {
-			// TODOs Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODOs Auto-generated catch block
-			e.printStackTrace();
-		}
+		return sendData(TOKEN+"/"+SEND_MESSAGE, nameValuePairs);
 	}
 	
 	public static String sendData(String urlex, List<NameValuePair> nameValuePairs) throws ClientProtocolException, IOException{
