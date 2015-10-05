@@ -279,7 +279,7 @@ public class BotService extends Service {
 							Log.d("MU", "sending " + text_replay);
 							String ut = Utils.sendMessage(chat_id, message_id, text_replay);
 							Log.d("MU", ut);
-						} else if (text.contains("mulai")) {
+						} else if (text.contains("ngomong mabuk")) {
 							Cursor cursor = context
 									.getContentResolver()
 									.query(Uri
@@ -301,13 +301,18 @@ public class BotService extends Service {
 							text_replay += list.get(indexrand);
 							Log.d("MU", "sending");
 							Utils.sendMessage(chat_id, message_id, text_replay);
-						} else if (text.contains("you")) {
+						} else if (text.contains("help")) {
 
 							String s = Utils.sendMessage(chat_id, message_id,
-									"penasaran kok ngga pernah ngirim");
+									"siapa lo - tentang bot \ninfo - informasi batrei device\ndetobin <desimal> - convert desimal ke biner\nngomong mabuk - ngomong random kayak orang mabuk");
 							Log.d("MU", s);
 						}else if(text.contains("info")){
 							showBatteryInfo();
+						}else if(text.contains("detobin")){
+							String stringDes = text.replace("detobin ","");
+							Log.d("MU", stringDes);
+							int decimal = Integer.parseInt(stringDes, 10);
+							Utils.sendMessage(chat_id, message_id, Integer.toBinaryString(decimal));
 						}
 						
 					}else {

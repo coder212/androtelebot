@@ -19,7 +19,7 @@ import android.util.Log;
 public class Utils {
 	
 	public static final String URL_TELEGRAM = "https://api.telegram.org/bot";
-	public static final String TOKEN = "YOUR TOKEN HERE";
+	public static final String TOKEN = "121245229:AAHWY55it9thgk3S20IltmV21oUqJ7JFVM4";
 	public static final String SEND_MESSAGE = "sendMessage";
 	public static final String GET_UPDATES = "getUpdates";
 	private static HttpPost httppost;
