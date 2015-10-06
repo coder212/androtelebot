@@ -264,13 +264,23 @@ public class BotService extends Service {
 					Log.d("MU", "get the text messages");
 					
 					update_id = jArray.getJSONObject(i).getInt("update_id");
+					ContentValues values = new ContentValues();
+					values.put("Updates_id", String.valueOf(update_id));
+
+					context
+							.getContentResolver()
+							.insert(Uri
+									.parse("content://com.resea.androtelebot.updateprovider/element"),
+									values);
 					if(update_id > update_idc){
 						if (message_string.contains("\"text\"")) {
 							text = message.getString("text");
 							Log.d("MU", "the text is " + text);
 						} else {
-							String sticker = message.getString("sticker");
-							Log.d("Mu", sticker);
+							//String sticker = message.getString("sticker");
+							text = "less";
+							Log.d("Mu", text);
+							
 						}
 						message_id = message.getInt("message_id");
 						Log.d("MU", "message id " + message_id);
@@ -296,9 +306,9 @@ public class BotService extends Service {
 							int indexrand = rnd.nextInt(list.size());
 							String text_replay = list.get(indexrand);
 							indexrand = rnd.nextInt(list.size());
-							text_replay += list.get(indexrand);
+							text_replay += " "+list.get(indexrand);
 							indexrand = rnd.nextInt(list.size());
-							text_replay += list.get(indexrand);
+							text_replay += " "+list.get(indexrand);
 							Log.d("MU", "sending");
 							Utils.sendMessage(chat_id, message_id, text_replay);
 						} else if (text.contains("help")) {
@@ -311,23 +321,17 @@ public class BotService extends Service {
 						}else if(text.contains("detobin")){
 							String stringDes = text.replace("detobin ","");
 							Log.d("MU", stringDes);
-							int decimal = Integer.parseInt(stringDes, 10);
-							Utils.sendMessage(chat_id, message_id, Integer.toBinaryString(decimal));
+							try{
+							    int decimal = Integer.parseInt(stringDes, 10);
+							    Utils.sendMessage(chat_id, message_id, Integer.toBinaryString(decimal));
+							}catch(Exception e){
+								
+							}
 						}
-						
 					}else {
 						
 						Log.d("MU", "update id sama dengan yang tadi hehe");
 					}
-					
-					ContentValues values = new ContentValues();
-					values.put("Updates_id", String.valueOf(update_id));
-
-					context
-							.getContentResolver()
-							.insert(Uri
-									.parse("content://com.resea.androtelebot.updateprovider/element"),
-									values);
 
 					
 				}
