@@ -50,7 +50,7 @@ public class MainActivity extends Activity {
 		Intent intent = new Intent(MainActivity.this,BotService.class);
 		PendingIntent pintent = PendingIntent.getService(this, 0, intent, 0);
 		AlarmManager alarm = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
-		alarm.setRepeating(AlarmManager.RTC_WAKEUP,cal.getTimeInMillis(),60*1000,pintent);
+		alarm.setRepeating(AlarmManager.RTC_WAKEUP,cal.getTimeInMillis(),2*1000,pintent);
 		setContentView(vie);
 	}
 	

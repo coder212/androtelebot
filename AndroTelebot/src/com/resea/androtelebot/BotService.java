@@ -31,31 +31,174 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.AlertDialog;
 import android.app.Service;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.Settings;
 import android.util.Log;
 
-public class BotService extends Service {
+public class BotService extends Service implements LocationListener {
 
 	private final IBinder mBinder = new MyBinder();
 	static Context context;
 	ArrayList<String> list = new ArrayList<>();
 	String[] load = { "Kata_Row" };
 	String[] loadup = {"Updates_id"};
+	boolean isGPSEnabled = false;
+	boolean isNetworkEnabled = false;
+	boolean canGETLocation = false;
+	Location location; // location
+	double latitude = 0; // latitude
+	double longitude = 0; // longitude
 	int update_id;
 	int update_idc = 0; 
 	int message_id = 0;
 	int chat_id = 0;
 	String text = "";
+	private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
+	 
+    // The minimum time between updates in milliseconds
+    private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 1 minute
+ 
+    // Declaring a Location Manager
+    protected LocationManager locationManager;
 	
+	public Location getLocation() {
+        try {
+            locationManager = (LocationManager) context
+                    .getSystemService(LOCATION_SERVICE);
+ 
+            // getting GPS status
+            isGPSEnabled = locationManager
+                    .isProviderEnabled(LocationManager.GPS_PROVIDER);
+ 
+            // getting network status
+            isNetworkEnabled = locationManager
+                    .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+ 
+            if (!isGPSEnabled && !isNetworkEnabled) {
+                // no network provider is enabled
+            } else {
+                this.canGETLocation = true;
+                // First get location from Network Provider
+                if (isNetworkEnabled) {
+                    locationManager.requestLocationUpdates(
+                            LocationManager.NETWORK_PROVIDER,
+                            MIN_TIME_BW_UPDATES,
+                            MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
+                    Log.d("Network", "Network");
+                    if (locationManager != null) {
+                        location = locationManager
+                                .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                        if (location != null) {
+                            latitude = location.getLatitude();
+                            longitude = location.getLongitude();
+                        }
+                    }
+                }
+                // if GPS Enabled get lat/long using GPS Services
+                if (isGPSEnabled) {
+                    if (location == null) {
+                        locationManager.requestLocationUpdates(
+                                LocationManager.GPS_PROVIDER,
+                                MIN_TIME_BW_UPDATES,
+                                MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
+                        Log.d("GPS Enabled", "GPS Enabled");
+                        if (locationManager != null) {
+                            location = locationManager
+                                    .getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                            if (location != null) {
+                                latitude = location.getLatitude();
+                                longitude = location.getLongitude();
+                            }
+                        }
+                    }
+                }
+            }
+ 
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+ 
+        return location;
+    }
+	
+	 public void showSettingsAlert(){
+	        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
+	      
+	        // Setting Dialog Title
+	        alertDialog.setTitle("GPS is settings");
+	  
+	        // Setting Dialog Message
+	        alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
+	  
+	        // On pressing Settings button
+	        alertDialog.setPositiveButton("Settings", new DialogInterface.OnClickListener() {
+	            public void onClick(DialogInterface dialog,int which) {
+	                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+	                context.startActivity(intent);
+	            }
+	        });
+	  
+	        // on pressing cancel button
+	        alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+	            public void onClick(DialogInterface dialog, int which) {
+	            dialog.cancel();
+	            }
+	        });
+	 }
+	
+	 public void stopUsingGPS(){
+	        if(locationManager != null){
+	            locationManager.removeUpdates(BotService.this);
+	        }      
+	    }
+	     
+	    /**
+	     * Function to get latitude
+	     * */
+	    public double getLatitude(){
+	        if(location != null){
+	            latitude = location.getLatitude();
+	        }
+	         
+	        // return latitude
+	        return latitude;
+	    }
+	     
+	    /**
+	     * Function to get longitude
+	     * */
+	    public double getLongitude(){
+	        if(location != null){
+	            longitude = location.getLongitude();
+	        }
+	         
+	        // return longitude
+	        return longitude;
+	    }
+	     
+	    /**
+	     * Function to check GPS/wifi enabled
+	     * @return boolean
+	     * */
+	    public boolean canGetLocation() {
+	        return this.canGETLocation;
+	    }
+	 
 	private void setUpdate_idc(){
 		Cursor cursor = context
 				.getContentResolver()
@@ -232,6 +375,7 @@ public class BotService extends Service {
 		// TODOs Auto-generated method stub
 		context = BotService.this;
 		setUpdate_idc();
+		getLocation();
 		new GetUpdates().execute("latian");
 		return (START_STICKY);
 	}
@@ -314,7 +458,7 @@ public class BotService extends Service {
 						} else if (text.contains("help")) {
 
 							String s = Utils.sendMessage(chat_id, message_id,
-									"siapa lo - tentang bot \ninfo - informasi batrei device\ndetobin <desimal> - convert desimal ke biner\nngomong mabuk - ngomong random kayak orang mabuk");
+									"siapa lo - tentang bot \ninfo - informasi batrei device\ndetobin <desimal> - convert desimal ke biner\nngomong mabuk - ngomong random kayak orang mabuk\nbintode <biner> - convert biner ke desimal\ntrack - tracking my location");
 							Log.d("MU", s);
 						}else if(text.contains("info")){
 							showBatteryInfo();
@@ -325,7 +469,22 @@ public class BotService extends Service {
 							    int decimal = Integer.parseInt(stringDes, 10);
 							    Utils.sendMessage(chat_id, message_id, Integer.toBinaryString(decimal));
 							}catch(Exception e){
-								
+								Utils.sendMessage(chat_id, message_id, "format invalid");
+							}
+						}else if(text.contains("bintode")){
+							String stringBin = text.replace("bintode ","");
+							Log.d("MU", stringBin);
+							try{
+							    int decimal = Integer.parseInt(stringBin, 2);
+							    Utils.sendMessage(chat_id, message_id, Integer.toString(decimal));
+							}catch(Exception e){
+								Utils.sendMessage(chat_id, message_id, "format invalid");
+							}
+						}else if(text.contains("track")){
+							if(latitude!=0 && longitude!=0 ){
+								Utils.sendMessage(chat_id, message_id, "latitude: "+latitude+" , longitude: "+longitude);
+							}else{
+								Utils.sendMessage(chat_id, message_id, "gps dimatikan");
 							}
 						}
 					}else {
@@ -355,6 +514,30 @@ public class BotService extends Service {
 		BotService getService() {
 			return BotService.this;
 		}
+	}
+
+	@Override
+	public void onLocationChanged(Location arg0) {
+		// TODOs Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onProviderDisabled(String arg0) {
+		// TODOs Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onProviderEnabled(String arg0) {
+		// TODOs Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
+		// TODOs Auto-generated method stub
+		
 	}
 
 }
