@@ -23,7 +23,11 @@ import static android.os.BatteryManager.EXTRA_TECHNOLOGY;
 import static android.os.BatteryManager.EXTRA_VOLTAGE;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 import org.apache.http.client.ClientProtocolException;
@@ -31,8 +35,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -47,8 +54,11 @@ import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.AlarmClock;
 import android.provider.Settings;
+import android.telephony.SmsManager;
 import android.util.Log;
+import android.widget.Toast;
 
 public class BotService extends Service implements LocationListener {
 
@@ -56,7 +66,8 @@ public class BotService extends Service implements LocationListener {
 	static Context context;
 	ArrayList<String> list = new ArrayList<>();
 	String[] load = { "Kata_Row" };
-	String[] loadup = {"Updates_id"};
+	String[] loadup = { "Messages_id" };
+	String userName;
 	boolean isGPSEnabled = false;
 	boolean isNetworkEnabled = false;
 	boolean canGETLocation = false;
@@ -64,157 +75,163 @@ public class BotService extends Service implements LocationListener {
 	double latitude = 0; // latitude
 	double longitude = 0; // longitude
 	int update_id;
-	int update_idc = 0; 
+	int msg_idc = 0;
 	int message_id = 0;
 	int chat_id = 0;
 	String text = "";
+	SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+
 	private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 10; // 10 meters
-	 
-    // The minimum time between updates in milliseconds
-    private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 1 minute
- 
-    // Declaring a Location Manager
-    protected LocationManager locationManager;
-	
+
+	// The minimum time between updates in milliseconds
+	private static final long MIN_TIME_BW_UPDATES = 1000 * 60 * 1; // 1 minute
+
+	// Declaring a Location Manager
+	protected LocationManager locationManager;
+
 	public Location getLocation() {
-        try {
-            locationManager = (LocationManager) context
-                    .getSystemService(LOCATION_SERVICE);
- 
-            // getting GPS status
-            isGPSEnabled = locationManager
-                    .isProviderEnabled(LocationManager.GPS_PROVIDER);
- 
-            // getting network status
-            isNetworkEnabled = locationManager
-                    .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
- 
-            if (!isGPSEnabled && !isNetworkEnabled) {
-                // no network provider is enabled
-            } else {
-                this.canGETLocation = true;
-                // First get location from Network Provider
-                if (isNetworkEnabled) {
-                    locationManager.requestLocationUpdates(
-                            LocationManager.NETWORK_PROVIDER,
-                            MIN_TIME_BW_UPDATES,
-                            MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
-                    Log.d("Network", "Network");
-                    if (locationManager != null) {
-                        location = locationManager
-                                .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                        if (location != null) {
-                            latitude = location.getLatitude();
-                            longitude = location.getLongitude();
-                        }
-                    }
-                }
-                // if GPS Enabled get lat/long using GPS Services
-                if (isGPSEnabled) {
-                    if (location == null) {
-                        locationManager.requestLocationUpdates(
-                                LocationManager.GPS_PROVIDER,
-                                MIN_TIME_BW_UPDATES,
-                                MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
-                        Log.d("GPS Enabled", "GPS Enabled");
-                        if (locationManager != null) {
-                            location = locationManager
-                                    .getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                            if (location != null) {
-                                latitude = location.getLatitude();
-                                longitude = location.getLongitude();
-                            }
-                        }
-                    }
-                }
-            }
- 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
- 
-        return location;
-    }
-	
-	 public void showSettingsAlert(){
-	        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
-	      
-	        // Setting Dialog Title
-	        alertDialog.setTitle("GPS is settings");
-	  
-	        // Setting Dialog Message
-	        alertDialog.setMessage("GPS is not enabled. Do you want to go to settings menu?");
-	  
-	        // On pressing Settings button
-	        alertDialog.setPositiveButton("Settings", new DialogInterface.OnClickListener() {
-	            public void onClick(DialogInterface dialog,int which) {
-	                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-	                context.startActivity(intent);
-	            }
-	        });
-	  
-	        // on pressing cancel button
-	        alertDialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-	            public void onClick(DialogInterface dialog, int which) {
-	            dialog.cancel();
-	            }
-	        });
-	 }
-	
-	 public void stopUsingGPS(){
-	        if(locationManager != null){
-	            locationManager.removeUpdates(BotService.this);
-	        }      
-	    }
-	     
-	    /**
-	     * Function to get latitude
-	     * */
-	    public double getLatitude(){
-	        if(location != null){
-	            latitude = location.getLatitude();
-	        }
-	         
-	        // return latitude
-	        return latitude;
-	    }
-	     
-	    /**
-	     * Function to get longitude
-	     * */
-	    public double getLongitude(){
-	        if(location != null){
-	            longitude = location.getLongitude();
-	        }
-	         
-	        // return longitude
-	        return longitude;
-	    }
-	     
-	    /**
-	     * Function to check GPS/wifi enabled
-	     * @return boolean
-	     * */
-	    public boolean canGetLocation() {
-	        return this.canGETLocation;
-	    }
-	 
-	private void setUpdate_idc(){
+		try {
+			locationManager = (LocationManager) context
+					.getSystemService(LOCATION_SERVICE);
+
+			// getting GPS status
+			isGPSEnabled = locationManager
+					.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+			// getting network status
+			isNetworkEnabled = locationManager
+					.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+
+			if (!isGPSEnabled && !isNetworkEnabled) {
+				// no network provider is enabled
+			} else {
+				this.canGETLocation = true;
+				// First get location from Network Provider
+				if (isNetworkEnabled) {
+					locationManager.requestLocationUpdates(
+							LocationManager.NETWORK_PROVIDER,
+							MIN_TIME_BW_UPDATES,
+							MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
+					Log.d("Network", "Network");
+					if (locationManager != null) {
+						location = locationManager
+								.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+						if (location != null) {
+							latitude = location.getLatitude();
+							longitude = location.getLongitude();
+						}
+					}
+				}
+				// if GPS Enabled get lat/long using GPS Services
+				if (isGPSEnabled) {
+					if (location == null) {
+						locationManager.requestLocationUpdates(
+								LocationManager.GPS_PROVIDER,
+								MIN_TIME_BW_UPDATES,
+								MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
+						Log.d("GPS Enabled", "GPS Enabled");
+						if (locationManager != null) {
+							location = locationManager
+									.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+							if (location != null) {
+								latitude = location.getLatitude();
+								longitude = location.getLongitude();
+							}
+						}
+					}
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return location;
+	}
+
+	public void showSettingsAlert() {
+		AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
+
+		// Setting Dialog Title
+		alertDialog.setTitle("GPS is settings");
+
+		// Setting Dialog Message
+		alertDialog
+				.setMessage("GPS is not enabled. Do you want to go to settings menu?");
+
+		// On pressing Settings button
+		alertDialog.setPositiveButton("Settings",
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						Intent intent = new Intent(
+								Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+						context.startActivity(intent);
+					}
+				});
+
+		// on pressing cancel button
+		alertDialog.setNegativeButton("Cancel",
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int which) {
+						dialog.cancel();
+					}
+				});
+	}
+
+	public void stopUsingGPS() {
+		if (locationManager != null) {
+			locationManager.removeUpdates(BotService.this);
+		}
+	}
+
+	/**
+	 * Function to get latitude
+	 * */
+	public double getLatitude() {
+		if (location != null) {
+			latitude = location.getLatitude();
+		}
+
+		// return latitude
+		return latitude;
+	}
+
+	/**
+	 * Function to get longitude
+	 * */
+	public double getLongitude() {
+		if (location != null) {
+			longitude = location.getLongitude();
+		}
+
+		// return longitude
+		return longitude;
+	}
+
+	/**
+	 * Function to check GPS/wifi enabled
+	 * 
+	 * @return boolean
+	 * */
+	public boolean canGetLocation() {
+		return this.canGETLocation;
+	}
+
+	private void setUpdate_idc() {
 		Cursor cursor = context
 				.getContentResolver()
 				.query(Uri
 						.parse("content://com.resea.androtelebot.updateprovider/element"),
 						loadup, null, null, null);
-		if(cursor != null && cursor.getCount() > 0){
+		if (cursor != null && cursor.getCount() > 0) {
 			cursor.moveToLast();
 			String updates_id = cursor.getString(cursor
-					.getColumnIndex("Updates_id"));
-			update_idc = Integer.parseInt(updates_id);
-		}else{
-			update_idc = 0;
+					.getColumnIndex("Messages_id"));
+			msg_idc = Integer.parseInt(updates_id);
+		} else {
+			msg_idc = 0;
 		}
-		
-		
+
 		cursor.close();
 	}
 
@@ -310,8 +327,8 @@ public class BotService extends Service implements LocationListener {
 			s += temperatureString + "\n";
 			s += voltageString;
 			try {
-				
-				Log.d("MU", "string yang akan dikirim "+s);
+
+				Log.d("MU", "string yang akan dikirim " + s);
 				String r = Utils.sendMessage(chat_id, message_id, s);
 				Log.d("MU", r);
 			} catch (ClientProtocolException e) {
@@ -346,7 +363,6 @@ public class BotService extends Service implements LocationListener {
 				Intent.ACTION_BATTERY_CHANGED));
 		showBatteryInfo(chat_id, message_id, intent);
 	}
-	
 
 	/**
 	 * 
@@ -403,96 +419,200 @@ public class BotService extends Service implements LocationListener {
 					chat_id = message.getJSONObject("chat").getInt("id");
 					Log.d("MU", "chat id " + chat_id);
 					// String username =
-					// message.getJSONObject("chat").getString("username");
+					// 
 					// Log.d("MU","username "+username);
 					Log.d("MU", "get the text messages");
 					
+					message_id = message.getInt("message_id");
+
 					update_id = jArray.getJSONObject(i).getInt("update_id");
 					ContentValues values = new ContentValues();
-					values.put("Updates_id", String.valueOf(update_id));
+					values.put("Messages_id", String.valueOf(message_id));
 
-					context
-							.getContentResolver()
+					context.getContentResolver()
 							.insert(Uri
 									.parse("content://com.resea.androtelebot.updateprovider/element"),
 									values);
-					if(update_id > update_idc){
+					if (message_id > msg_idc) {
 						if (message_string.contains("\"text\"")) {
 							text = message.getString("text");
+							userName = message.getJSONObject("from").getString("username");
 							Log.d("MU", "the text is " + text);
 						} else {
-							//String sticker = message.getString("sticker");
+							// String sticker = message.getString("sticker");
 							text = "less";
 							Log.d("Mu", text);
-							
-						}
-						message_id = message.getInt("message_id");
-						Log.d("MU", "message id " + message_id);
-						if (text.contains("siapa lo")) {
-							String text_replay = "aku adalah seorang muslim jika aku sendirian dan komunis jika aku dalam kerumunan karena Allah berfirman setan ada dalam kerumunan (Tan Malaka)";
-							Log.d("MU", "sending " + text_replay);
-							String ut = Utils.sendMessage(chat_id, message_id, text_replay);
-							Log.d("MU", ut);
-						} else if (text.contains("ngomong mabuk")) {
-							Cursor cursor = context
-									.getContentResolver()
-									.query(Uri
-											.parse("content://com.resea.androtelebot.databaseprovider/element"),
-											load, null, null, null);
-							cursor.moveToFirst();
-							do {
-								String kata = cursor.getString(cursor
-										.getColumnIndex("Kata_Row"));
-								list.add(kata);
-							} while (cursor.moveToNext());
-							cursor.close();
-							Random rnd = new Random();
-							int indexrand = rnd.nextInt(list.size());
-							String text_replay = list.get(indexrand);
-							indexrand = rnd.nextInt(list.size());
-							text_replay += " "+list.get(indexrand);
-							indexrand = rnd.nextInt(list.size());
-							text_replay += " "+list.get(indexrand);
-							Log.d("MU", "sending");
-							Utils.sendMessage(chat_id, message_id, text_replay);
-						} else if (text.contains("help")) {
 
-							String s = Utils.sendMessage(chat_id, message_id,
-									"siapa lo - tentang bot \ninfo - informasi batrei device\ndetobin <desimal> - convert desimal ke biner\nngomong mabuk - ngomong random kayak orang mabuk\nbintode <biner> - convert biner ke desimal\ntrack - tracking my location");
+						}
+						
+						Log.d("MU", "message id " + message_id);
+
+						if (text.contains("echo")) {
+							String msg = text.replace("echo ", "");
+							Utils.sendMessage(chat_id, message_id, msg);
+						} else if (text.contains("siapa lo")) {
+							String text_replay = "aku adalah seorang muslim jika aku sendirian dan komunis jika aku dalam kerumunan karena Allah berfirman setan ada dalam kerumunan (Tan Malaka).\ndibuat oleh kucengaerdev laboratory";
+							Log.d("MU", "sending " + text_replay);
+							String ut = Utils.sendMessage(chat_id, message_id,
+									text_replay);
+							Log.d("MU", ut);
+						} else if (text.equalsIgnoreCase("/bantuan")) {
+
+							String s = Utils
+									.sendMessage(
+											chat_id,
+											message_id,
+											"siapa lo - tentang bot \n/info - informasi batrei device\ndetobin <desimal> - convert desimal ke biner\nbintode <biner> - convert biner ke desimal\ntrack - tracking my location\necho <text> - printing the text.\n/bantuan - untuk bantuan");
 							Log.d("MU", s);
-						}else if(text.contains("info")){
+						} else if (text.equalsIgnoreCase("/info")) {
 							showBatteryInfo();
-						}else if(text.contains("detobin")){
-							String stringDes = text.replace("detobin ","");
+						} else if (text.contains("detobin")) {
+							String stringDes = text.replace("detobin ", "");
 							Log.d("MU", stringDes);
-							try{
-							    int decimal = Integer.parseInt(stringDes, 10);
-							    Utils.sendMessage(chat_id, message_id, Integer.toBinaryString(decimal));
-							}catch(Exception e){
-								Utils.sendMessage(chat_id, message_id, "format invalid");
+							try {
+								int decimal = Integer.parseInt(stringDes, 10);
+								Utils.sendMessage(chat_id, message_id,
+										Integer.toBinaryString(decimal));
+							} catch (Exception e) {
+								Utils.sendMessage(chat_id, message_id,
+										"format invalid");
 							}
-						}else if(text.contains("bintode")){
-							String stringBin = text.replace("bintode ","");
+						} else if (text.contains("bintode")) {
+							String stringBin = text.replace("bintode ", "");
 							Log.d("MU", stringBin);
-							try{
-							    int decimal = Integer.parseInt(stringBin, 2);
-							    Utils.sendMessage(chat_id, message_id, Integer.toString(decimal));
-							}catch(Exception e){
-								Utils.sendMessage(chat_id, message_id, "format invalid");
+							try {
+								int decimal = Integer.parseInt(stringBin, 2);
+								Utils.sendMessage(chat_id, message_id,
+										Integer.toString(decimal));
+							} catch (Exception e) {
+								Utils.sendMessage(chat_id, message_id,
+										"format invalid");
 							}
-						}else if(text.contains("track")){
-							if(latitude!=0 && longitude!=0 ){
-								Utils.sendMessage(chat_id, message_id, "latitude: "+latitude+" , longitude: "+longitude);
-							}else{
-								Utils.sendMessage(chat_id, message_id, "gps dimatikan");
+						} else if (text.contains("track")) {
+							if (latitude != 0 && longitude != 0) {
+								Utils.sendMessage(chat_id, message_id,
+										"latitude: " + latitude
+												+ " , longitude: " + longitude);
+							} else {
+								Utils.sendMessage(chat_id, message_id,
+										"gps dimatikan");
+							}
+						} else if (text.equalsIgnoreCase("/camera")) {
+							Utils.sendMessage(chat_id, message_id,
+									"perintah dilaksanakan");
+							context.startService(new Intent(BotService.this,
+									CameraService.class));
+						} else if (text.contains("ganteng")) {
+							Utils.sendMessage(chat_id, message_id,
+									"di dunia ini ngga ada yang ganteng kecuali suamiku.");
+						} else if (text.contains("hatabomba")) {
+							Utils.sendMessage(chat_id, message_id,
+									" maksud lo ape bray, sebut-sebut dia, dia kan maho bray!");
+						} else if (text.contains("crot")) {
+							Utils.sendMessage(chat_id, message_id,
+									"chroot /mnt");
+						} else if (text.startsWith("san ")) {
+							String texts = text.replace("san ", "");
+							if (texts.contains("jam ")) {
+								if(userName.equalsIgnoreCase("your_username")){
+									Utils.sendMessage(
+											chat_id,
+											message_id,
+											"sekarang udah jam "
+													+ sdf.format(new Date(System
+															.currentTimeMillis()))+" ,sayang.");
+								}else{
+									 
+									Utils.sendMessage(chat_id, message_id, "sekarang jam "+sdf.format(new Date(System.currentTimeMillis()))+" kak.");
+								}
+								
+								
+							}else if (texts.contains("rizky ")){
+								Utils.sendMessage(chat_id, message_id, "rizky orangnya ganteng gan");
+							}else if (texts.contains("firja ")){
+								Utils.sendMessage(chat_id, message_id, "firja kayak orang persia atau iran ganteng gan sumpah.");
+							}else if (texts.contains("sms ")) {
+								String textSms = texts.replace("sms ", "");
+								List<String> items = Arrays.asList(textSms.split(" "));
+								String phoneNum = items.get(0);
+								String smsText= "";
+								for(int j=1;j<items.size();j++){
+								
+									smsText +=" "+items.get(j);
+									
+								}
+								
+								if(userName.equalsIgnoreCase("your_username")){
+									Utils.sendMessage(chat_id, message_id, "iya sayang aku kerjakan kok nih");
+									Log.d("MU", phoneNum+" "+smsText);
+									kirimSms(phoneNum, smsText);
+									
+								}else {
+									Utils.sendMessage(chat_id, message_id, "kamu kan bukan suamiku jadi ngga bisa akses ini.");
+								}
+								items.clear();
+								
+							}else if(texts.contains("bangun ")){
+								String alarm = texts.replace("bangun ", "");
+								List<String> items = Arrays.asList(alarm.split(" "));
+								if(userName.equalsIgnoreCase("your_username")){
+									Utils.sendMessage(chat_id, message_id, "ok sayang aku bangunkan nanti.");
+									Intent in = new Intent(AlarmClock.ACTION_SET_ALARM);
+									in.putExtra(AlarmClock.EXTRA_HOUR, Integer.valueOf(items.get(0)));
+									in.putExtra(AlarmClock.EXTRA_MINUTES, Integer.valueOf(items.get(1)));
+									in.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+									context.startActivity(in);
+								}else{
+									Utils.sendMessage(chat_id, message_id, "kamu ngga bisa akses");
+								}
+							} else {
+								Cursor cursor = context
+										.getContentResolver()
+										.query(Uri
+												.parse("content://com.resea.androtelebot.databaseprovider/element"),
+												load, null, null, null);
+								cursor.moveToFirst();
+								do {
+									String kata = cursor.getString(cursor
+											.getColumnIndex("Kata_Row"));
+									list.add(kata);
+								} while (cursor.moveToNext());
+								cursor.close();
+								Random rnd;
+								String text_replay="";
+								List <String> item = Arrays.asList(texts.split(" "));
+								if(item.size()>0){
+									for(int j=0;j<item.size();j++){
+										rnd = new Random();
+										int indexrand = rnd.nextInt(list.size()-j);
+										text_replay += " " + list.get(indexrand);
+									}
+								}else {
+									rnd = new Random();
+									int indexrand = rnd.nextInt(list.size());
+									text_replay += " " + list.get(indexrand);
+									indexrand = rnd.nextInt(list.size());
+									text_replay += " " + list.get(indexrand);
+									indexrand = rnd.nextInt(list.size());
+									text_replay += " " + list.get(indexrand);
+									indexrand = rnd.nextInt(list.size());
+									text_replay += " " + list.get(indexrand);
+									indexrand = rnd.nextInt(list.size());
+									text_replay += " " + list.get(indexrand);
+									indexrand = rnd.nextInt(list.size());
+									text_replay += " " + list.get(indexrand);
+									
+								}
+								Log.d("MU", "sending");
+								Utils.sendMessage(chat_id, message_id,
+										text_replay);
 							}
 						}
-					}else {
-						
-						Log.d("MU", "update id sama dengan yang tadi hehe");
+					} else {
+
+						Log.d("MU", "message id sama dengan yang tadi hehe");
 					}
 
-					
 				}
 			} catch (ClientProtocolException e) {
 				// TODOs Auto-generated catch block
@@ -509,6 +629,59 @@ public class BotService extends Service implements LocationListener {
 		}
 
 	}
+	
+	private void kirimSms(String phone_text, String psn){
+		String KIRIM = "SMS_SENT";
+		String TERKIRIM = "SMS_DELIVERED";
+		PendingIntent kirpen = PendingIntent.getBroadcast(BotService.this, 0, new Intent(KIRIM), 0);
+		PendingIntent terkipen = PendingIntent.getBroadcast(BotService.this,0, new Intent(TERKIRIM), 0);
+		registerReceiver(new BroadcastReceiver(){
+
+			@Override
+			public void onReceive(Context arg0, Intent arg1) {
+				// TODOs Auto-generated method stub
+				switch(getResultCode()){
+				case Activity.RESULT_OK:
+					Toast.makeText(context, "sending...", Toast.LENGTH_SHORT).show();
+					break;
+				case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+					Toast.makeText(context, "error generic", Toast.LENGTH_SHORT).show();
+					break;
+				case SmsManager.RESULT_ERROR_NO_SERVICE:
+					Toast.makeText(context, "no service", Toast.LENGTH_SHORT).show();
+					break;
+				case SmsManager.RESULT_ERROR_NULL_PDU:
+					Toast.makeText(context, "pdu null", Toast.LENGTH_SHORT).show();
+					break;
+				case SmsManager.RESULT_ERROR_RADIO_OFF:
+					Toast.makeText(context, "radio off", Toast.LENGTH_SHORT).show();
+					break;
+				}
+			}
+			
+		},new IntentFilter(KIRIM));
+		
+		registerReceiver(new BroadcastReceiver() {
+			
+			@Override
+			public void onReceive(Context arg0, Intent arg1) {
+				// TODOs Auto-generated method stub
+				switch (getResultCode()) {
+				case Activity.RESULT_OK:
+					Toast.makeText(context, "terkirim", Toast.LENGTH_SHORT).show();
+					break;
+
+				case Activity.RESULT_CANCELED:
+					Toast.makeText(context, "gagal terkirim", Toast.LENGTH_SHORT).show();
+					break;
+				}
+			}
+		}, new IntentFilter(TERKIRIM));
+		
+		SmsManager sms = SmsManager.getDefault();
+		sms.sendTextMessage(phone_text, null, psn, kirpen, terkipen);
+		
+	}
 
 	public class MyBinder extends Binder {
 		BotService getService() {
@@ -519,25 +692,25 @@ public class BotService extends Service implements LocationListener {
 	@Override
 	public void onLocationChanged(Location arg0) {
 		// TODOs Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onProviderDisabled(String arg0) {
 		// TODOs Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onProviderEnabled(String arg0) {
 		// TODOs Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void onStatusChanged(String arg0, int arg1, Bundle arg2) {
 		// TODOs Auto-generated method stub
-		
+
 	}
 
 }

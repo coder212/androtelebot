@@ -3,4 +3,10 @@
     <issue id="DefaultLocale">
         <ignore path="src/com/resea/androtelebot/BotService.java" />
     </issue>
+    <issue id="InlinedApi">
+        <ignore path="src/com/resea/androtelebot/BotService.java" />
+    </issue>
+    <issue id="SimpleDateFormat" severity="ignore">
+        <ignore path="src/com/resea/androtelebot/BotService.java" />
+    </issue>
 </lint>

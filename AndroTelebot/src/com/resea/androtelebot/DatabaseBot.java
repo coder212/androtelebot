@@ -13,8 +13,8 @@ public class DatabaseBot extends SQLiteOpenHelper {
 	public final String KATA_ROW = "Kata_Row";
 	public final String KATA_TABLE = "Kata_Random";
 	
-	public final String UPDATES_ID_ROW = "Updates_id";
-	public final String UPDATES_ID_TABLE = "Updates_id_table";
+	public final String UPDATES_ID_ROW = "Messages_id";
+	public final String UPDATES_ID_TABLE = "Messages_id_table";
 	
 	private final String CREATE_KATA_TABLE = "create table "+KATA_TABLE+"("+ID+" integer primary key,"+KATA_ROW+" text not null);";
 	private final String CREATE_UPDATES_ID_TABLE = "create table "+UPDATES_ID_TABLE+"("+ID+" integer primary key,"+UPDATES_ID_ROW+" text not null);";

@@ -17,8 +17,7 @@ import android.widget.TextView;
 public class MainActivity extends Activity {
 	
 	String[] projection = {"Kata_Row"};
-	String[] kata_nietze = {"When we hear the ancient bells growling on a Sunday morning we ask ourselves Is it really possible This for a jew crucified two thousand years ago who said he was God's son? The proof of such a claim is lacking Certainly the Christian religion is an antiquity projected into our times from remote prehistory and the fact that the claim is believed  whereas one is otherwise so strict in examining pretensions  is perhaps the most ancient piece of this heritage. A god who begets children with a mortal woman a sage who bids men work no more have no more courts", "but look for the signs of the impending end of the world a justice that accepts the innocent as a vicarious sacrifice; someone who orders his disciples to drink his blood; prayers for miraculous interventions; sins perpetrated against a god, atoned for by a god;" ,"fear of a beyond to which death is the portal; the form of the cross as a symbol in a time" ,"that no longer knows the function and" ,
-			 "ignominy of the" ,"cross",  "how" ,"ghoulishly", "all", "this", "touches" ,"us", "as", "if", "from", "the", "tomb" ,"of" ,"a", "primeval", "past", "Can", "one", "believe", "that", "such", "things" ,"are" ,"still", "believed"};
+	String[] kata_kata = {"aku","kamu","dia","dirinya","waktu","hidup adalah menunggu mati","sekali tenar hilang dan berganti","menurutku","aku memilihmu karena kamu beda dengan yang lainnya","sayang makan yuk dari tadi ngoding ngga selesai-selesai","mau dimasakin apa say?","say, apbnnya saya yang buat ya.","say jangan lupa sholat!","say kok kamu kalo ngoding, bisa lupa segalanya sih.","apaan coba -_-","apaan forward2 -_-","kalian alay","gabut banget pokoknya","apaan sih -_-","aku ngga suka dengan yang dibahas","terlalu banyak ngomong porno","kalian kalo ngga bahas ngoding pasti bahas tuhan atau porno mboseni."};
 	
 	DatabaseBot dbBot;
 	
@@ -33,7 +32,7 @@ public class MainActivity extends Activity {
 		TextView vie = new TextView(this);
 		vie.setText("bot sedang berjalan");
 		if(!exists()){
-			for (String item : kata_nietze) {
+			for (String item : kata_kata) {
 
 				ContentValues values = new ContentValues();
 				values.put("Kata_Row", item);
