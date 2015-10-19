@@ -78,7 +78,9 @@ public class BotService extends Service implements LocationListener {
 	int update_id;
 	int msg_idc = 0;
 	int message_id = 0;
-	int chat_id = 0;
+	int chat_id = 0,user_id = 0,from_id=0;
+	int from_chat_id=0,from_msg_id=0;
+	String from_user_name="";
 	String text = "";
 	SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
 
@@ -341,6 +343,7 @@ public class BotService extends Service implements LocationListener {
 			try {
 
 				Log.d("MU", "string yang akan dikirim " + s);
+				Utils.sendChatAction(chat_id, "typing");
 				String r = Utils.sendMessage(chat_id, message_id, s);
 				Log.d("MU", r);
 			} catch (ClientProtocolException e) {
@@ -356,6 +359,7 @@ public class BotService extends Service implements LocationListener {
 			String s = "No battery information";
 			Log.i("MU", s);
 			try {
+				Utils.sendChatAction(chat_id, "typing");
 				String r = Utils.sendMessage(chat_id, message_id, s);
 				Log.d("MU", r);
 			} catch (ClientProtocolException e) {
@@ -449,85 +453,169 @@ public class BotService extends Service implements LocationListener {
 								values);
 						if (message_string.contains("\"text\"")) {
 							text = message.getString("text");
+							user_id = message.getJSONObject("from").getInt("id");
 							userName = message.getJSONObject("from").getString("username");
 							Log.d("MU", "the text is " + text);
-						} else {
+						}else {
 							// String sticker = message.getString("sticker");
 							text = "less";
 							Log.d("Mu", text);
 
 						}
 						
+						if(message_string.contains("\"reply_to_message\"")){
+							from_chat_id = message.getJSONObject("reply_to_message").getJSONObject("chat").getInt("id");
+							from_msg_id = message.getJSONObject("reply_to_message").getInt("message_id");
+							from_id = message.getJSONObject("from").getInt("id");
+							from_user_name = message.getJSONObject("reply_to_message").getJSONObject("from").getString("username");
+							Log.i("MU",""+from_chat_id+" "+from_msg_id+" "+from_user_name);
+							if(from_user_name.toLowerCase().equalsIgnoreCase("sabetan_bot")){
+								Cursor cursor = context
+										.getContentResolver()
+										.query(Uri
+												.parse("content://com.resea.androtelebot.databaseprovider/element"),
+												load, null, null, null);
+								cursor.moveToFirst();
+								do {
+									String kata = cursor.getString(cursor
+											.getColumnIndex("Kata_Row"));
+									list.add(kata);
+								} while (cursor.moveToNext());
+								cursor.close();
+								Random rnd;
+								String text_replay="";
+								List <String> item = Arrays.asList(text.split(" "));
+								if(item.size()>0&&item!=null){
+									for(int j=0;j<item.size();j++){
+										rnd = new Random();
+										int indexrand = rnd.nextInt(list.size()-j);
+										text_replay += " " + list.get(indexrand);
+									}
+								}else {
+									rnd = new Random();
+									int indexrand = rnd.nextInt(list.size());
+									text_replay += " " + list.get(indexrand);
+									indexrand = rnd.nextInt(list.size());
+									text_replay += " " + list.get(indexrand);
+									indexrand = rnd.nextInt(list.size());
+									text_replay += " " + list.get(indexrand);
+									indexrand = rnd.nextInt(list.size());
+									text_replay += " " + list.get(indexrand);
+									indexrand = rnd.nextInt(list.size());
+									text_replay += " " + list.get(indexrand);
+									indexrand = rnd.nextInt(list.size());
+									text_replay += " " + list.get(indexrand);
+									
+								}
+								Log.d("MU", "sending");
+								Utils.sendChatAction(chat_id, "typing");
+								Utils.sendMessage(chat_id, message_id,
+										text_replay);
+								list.clear();
+							}
+							if((text.startsWith("forward "))&&(userName.toLowerCase().equalsIgnoreCase("martin_luther"))){
+								Utils.forwardMessage(from_id, from_chat_id, from_msg_id);
+							}
+							
+						}
+						
 						Log.d("MU", "message id " + message_id);
 
-						if (text.toLowerCase().contains("echo")) {
-							String msg = text.replace("echo ", "");
+						if (text.toLowerCase().startsWith("/echo")) {
+							String msg = "";
+							if(text.toLowerCase().contains("/echo@sabetan_bot")){
+								msg = text.toLowerCase().replace("/echo@sabetan_bot ", "");
+							}else{
+								msg = text.toLowerCase().replace("/echo ", "");
+							}
+							Utils.sendChatAction(chat_id, "typing");
 							Utils.sendMessage(chat_id, message_id, msg);
-						} else if (text.toLowerCase().contains("siapa lo")) {
+						} else if (text.toLowerCase().startsWith("/siapalo")) {
 							String text_replay = "aku adalah seorang muslim jika aku sendirian dan komunis jika aku dalam kerumunan karena Allah berfirman setan ada dalam kerumunan (Tan Malaka).\ndibuat oleh kucengaerdev laboratory";
 							Log.d("MU", "sending " + text_replay);
+							Utils.sendChatAction(chat_id, "typing");
 							String ut = Utils.sendMessage(chat_id, message_id,
 									text_replay);
 							Log.d("MU", ut);
-						} else if (text.toLowerCase().equalsIgnoreCase("/bantuan")) {
+						} else if (text.toLowerCase().startsWith("/bantuan")) {
 
+							Utils.sendChatAction(chat_id, "typing");
 							String s = Utils
-									.sendMessage(
-											chat_id,
-											message_id,
-											"siapa lo - tentang bot \n/info - informasi batrei device\ndetobin <desimal> - convert desimal ke biner\nbintode <biner> - convert biner ke desimal\ntrack - tracking my location\necho <text> - printing the text.\n/bantuan - untuk bantuan");
+									.sendHelp(
+											user_id,
+											"/siapalo - tentang bot \n/info - informasi batrei device\n/detobin <desimal> - convert desimal ke biner\n/bintode <biner> - convert biner ke desimal\n/track - tracking my location\n/echo <text> - printing the text.\n/bantuan - untuk bantuan");
 							Log.d("MU", s);
-						} else if (text.toLowerCase().equalsIgnoreCase("/info")) {
+						} else if (text.toLowerCase().startsWith("/info")) {
 							showBatteryInfo();
-						} else if (text.toLowerCase().contains("detobin")) {
-							String stringDes = text.replace("detobin ", "");
+						} else if (text.toLowerCase().startsWith("/detobin")) {
+							String stringDes = "";
+							if(text.toLowerCase().contains("/detobin@sabetan_bot")){
+								stringDes = text.toLowerCase().replace("/detobin@sabetan_bot ", "");
+							}else{
+								stringDes = text.toLowerCase().replace("/detobin ", "");
+							}
 							Log.d("MU", stringDes);
 							try {
 								int decimal = Integer.parseInt(stringDes, 10);
+								Utils.sendChatAction(chat_id, "typing");
 								Utils.sendMessage(chat_id, message_id,
 										Integer.toBinaryString(decimal));
 							} catch (Exception e) {
+								Utils.sendChatAction(chat_id, "typing");
 								Utils.sendMessage(chat_id, message_id,
 										"format invalid");
 							}
-						} else if (text.toLowerCase().contains("bintode")) {
-							String stringBin = text.replace("bintode ", "");
+						} else if (text.toLowerCase().startsWith("/bintode")) {
+							String stringBin = "";
+							if(text.toLowerCase().contains("/bintode@sabetan_bot")){
+							    stringBin = text.toLowerCase().replace("/bintode@sabetan_bot ", "");
+							}else{
+								stringBin = text.toLowerCase().replace("/bintode ", "");
+							}
 							Log.d("MU", stringBin);
 							try {
 								int decimal = Integer.parseInt(stringBin, 2);
+								Utils.sendChatAction(chat_id, "typing");
 								Utils.sendMessage(chat_id, message_id,
 										Integer.toString(decimal));
 							} catch (Exception e) {
+								Utils.sendChatAction(chat_id, "typing");
 								Utils.sendMessage(chat_id, message_id,
 										"format invalid");
 							}
-						} else if (text.toLowerCase().contains("track")) {
+						} else if (text.toLowerCase().startsWith("/track")) {
 							if (latitude != 0 && longitude != 0) {
-								Utils.sendMessage(chat_id, message_id,
-										"latitude: " + latitude
-												+ " , longitude: " + longitude);
+								Log.i("MU", "send "+latitude+" and "+longitude);
+								Utils.sendChatAction(chat_id, "find_location");
+								Utils.sendLocation(chat_id, message_id,(float)latitude,(float)longitude);
 							} else {
+								Utils.sendChatAction(chat_id, "typing");
 								Utils.sendMessage(chat_id, message_id,
 										"gps dimatikan");
 							}
 						} else if (text.toLowerCase().equalsIgnoreCase("/poto")) {
+							Utils.sendChatAction(chat_id, "typing");
 							Utils.sendMessage(chat_id, message_id,
 									"perintah dilaksanakan");
 							context.startService(new Intent(BotService.this,
 									CameraService.class));
 						} else if (text.toLowerCase().contains("ganteng")) {
+							Utils.sendChatAction(chat_id, "typing");
 							Utils.sendMessage(chat_id, message_id,
 									"di dunia ini ngga ada yang ganteng kecuali suamiku.");
 						} else if (text.toLowerCase().contains("hatabomba")) {
+							Utils.sendChatAction(chat_id, "typing");
 							Utils.sendMessage(chat_id, message_id,
 									" maksud lo ape bray, sebut-sebut dia, dia kan maho bray!");
 						} else if (text.toLowerCase().contains("crot")) {
+							Utils.sendChatAction(chat_id, "typing");
 							Utils.sendMessage(chat_id, message_id,
 									"chroot /mnt");
 						} else if (text.toLowerCase().startsWith("san ")) {
 							String texts = text.toLowerCase().replace("san ", "");
 							if (texts.toLowerCase().contains("jam ")) {
-								if(userName.equalsIgnoreCase("your_user_name")){
+								if(userName.equalsIgnoreCase("martin_luther")){
+									Utils.sendChatAction(chat_id, "typing");
 									Utils.sendMessage(
 											chat_id,
 											message_id,
@@ -535,14 +623,16 @@ public class BotService extends Service implements LocationListener {
 													+ sdf.format(new Date(System
 															.currentTimeMillis()))+" ,sayang.");
 								}else{
-									 
+									Utils.sendChatAction(chat_id, "typing");
 									Utils.sendMessage(chat_id, message_id, "sekarang jam "+sdf.format(new Date(System.currentTimeMillis()))+" kak.");
 								}
 								
 								
 							}else if (texts.contains("rizky ")){
+								Utils.sendChatAction(chat_id, "typing");
 								Utils.sendMessage(chat_id, message_id, "rizky orangnya ganteng gan");
 							}else if (texts.contains("firja ")){
+								Utils.sendChatAction(chat_id, "typing");
 								Utils.sendMessage(chat_id, message_id, "firja kayak orang persia atau iran ganteng gan sumpah.");
 							}else if (texts.toLowerCase().contains("sms ")) {
 								String textSms = texts.replace("sms ", "");
@@ -555,12 +645,14 @@ public class BotService extends Service implements LocationListener {
 									
 								}
 								
-								if(userName.equalsIgnoreCase("your_user_name")){
+								if(userName.equalsIgnoreCase("martin_luther")){
+									Utils.sendChatAction(chat_id, "typing");
 									Utils.sendMessage(chat_id, message_id, "iya sayang aku kerjakan kok nih");
 									Log.d("MU", phoneNum+" "+smsText);
 									kirimSms(phoneNum, smsText);
 									
 								}else {
+									Utils.sendChatAction(chat_id, "typing");
 									Utils.sendMessage(chat_id, message_id, "kamu kan bukan suamiku jadi ngga bisa akses ini.");
 								}
 								items.clear();
@@ -568,7 +660,8 @@ public class BotService extends Service implements LocationListener {
 							}else if(texts.toLowerCase().contains("bangun ")){
 								String alarm = texts.replace("bangun ", "");
 								List<String> items = Arrays.asList(alarm.split(" "));
-								if(userName.equalsIgnoreCase("your_user_name")){
+								if(userName.equalsIgnoreCase("martin_luther")){
+									Utils.sendChatAction(chat_id, "typing");
 									Utils.sendMessage(chat_id, message_id, "ok sayang aku bangunkan nanti.");
 									Intent in = new Intent(AlarmClock.ACTION_SET_ALARM);
 									in.putExtra(AlarmClock.EXTRA_HOUR, Integer.valueOf(items.get(0)));
@@ -576,9 +669,11 @@ public class BotService extends Service implements LocationListener {
 									in.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 									context.startActivity(in);
 								}else{
+									Utils.sendChatAction(chat_id, "typing");
 									Utils.sendMessage(chat_id, message_id, "kamu ngga bisa akses");
 								}
 							} else if(texts.startsWith("play")){
+								Utils.sendChatAction(chat_id, "typing");
 								Utils.sendMessage(chat_id, message_id, "akan membuka music player");
 								Intent intent = new Intent("android.intent.action.MUSIC_PLAYER");
 								intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -592,43 +687,52 @@ public class BotService extends Service implements LocationListener {
 										Log.i("MU", items.get(1));
 										double dAkar = Double.valueOf(items.get(1));
 										double hasil = Math.sqrt(dAkar);
+										Utils.sendChatAction(chat_id, "typing");
 										Utils.sendMessage(chat_id, message_id, "akar dari "+dAkar+" = "+hasil);
 									}else if(items.get(0).contains("luasbumi")){
 										double rBumi = 6378.137;
 										double lLingkaran = Math.PI *(Math.pow(rBumi, 2));
 										double luasBumi = 6 * lLingkaran;
+										Utils.sendChatAction(chat_id, "typing");
 										Utils.sendMessage(chat_id, message_id, "Luas bumi adalah "+luasBumi+" km persegi");
 									}else if(items.get(0).contains("luaslingkaran")){
 										double rLingkaran = Double.valueOf(items.get(1));
 										double luasLingkaran = Math.PI *(Math.pow(rLingkaran, 2));
+										Utils.sendChatAction(chat_id, "typing");
 										Utils.sendMessage(chat_id, message_id, "luas lingkaranya = "+luasLingkaran+" cm persegi");
 									}else if(items.get(0).contains("kelilinglingkaran")){
 										double rLingkaran = Double.valueOf(items.get(1));
 										double kelilingLingkaran = Math.PI * rLingkaran;
+										Utils.sendChatAction(chat_id, "typing");
 										Utils.sendMessage(chat_id, message_id, "keliling lingkaran = "+kelilingLingkaran+" cm");
 									}else if(items.get(0).contains("kuatarus")){
 										double tgangan = Double.valueOf(items.get(1));
 										double hambatan = Double.valueOf(items.get(2));
 										double kuatArus = tgangan / hambatan;
+										Utils.sendChatAction(chat_id, "typing");
 										Utils.sendMessage(chat_id, message_id, "kuat arus = "+kuatArus+" ampere");
 									}else if(items.get(0).contains("tegangan")){
 										double hambatan = Double.valueOf(items.get(1));
 										double kuatArus = Double.valueOf(items.get(2));
 										double tegangan = hambatan * kuatArus;
+										Utils.sendChatAction(chat_id, "typing");
 										Utils.sendMessage(chat_id, message_id, "tegangan = "+tegangan+" volt");
 									}else if(items.get(0).contains("hambatan")){
 										double tegangan = Double.valueOf(items.get(1));
 										double kuatArus = Double.valueOf(items.get(2));
 										double hambatan = tegangan / kuatArus;
+										Utils.sendChatAction(chat_id, "typing");
 										Utils.sendMessage(chat_id, message_id, "hambatan = "+hambatan+" ohm");
 									}else if(items.get(0).contains("jarak")){
 										double kecepatan = Double.valueOf(items.get(1));
 										double waktu = Double.valueOf(items.get(2));
 										double jarak = kecepatan * waktu;
+										Utils.sendChatAction(chat_id, "typing");
 										Utils.sendMessage(chat_id, message_id, "jarak = "+jarak+" kilometer");
 									}else if(items.get(0).contains("luaspermukaanbumi")){
 										double rBumi = 6378.137;
 										double lLingkaran = Math.PI *(Math.pow(rBumi, 2));
+										Utils.sendChatAction(chat_id, "typing");
 										Utils.sendMessage(chat_id, message_id, "luas permukaan bumi adalah "+lLingkaran+" km persegi");
 									}else{
 									   double d1 = Double.valueOf(items.get(0));
@@ -637,21 +741,27 @@ public class BotService extends Service implements LocationListener {
 									   Log.i("MU", items.get(1));
 									   if((items.get(1).contains("bagi"))||(items.get(1).contains("/"))||(items.get(1).contains(":"))){
 										   hasil = d1 / d2;
+										   Utils.sendChatAction(chat_id, "typing");
 										   Utils.sendMessage(chat_id, message_id, ""+d1+" : "+d2+" = "+hasil);
 									   }else if((items.get(1).contains("kali"))||(items.get(1).contains("x"))||(items.get(1).contains("*"))){
 										   hasil = d1 * d2;
+										   Utils.sendChatAction(chat_id, "typing");
 										   Utils.sendMessage(chat_id, message_id, ""+d1+" X "+d2+" = "+hasil);
 									   }else if((items.get(1).contains("tambah"))||(items.get(1).contains("+"))){
 										   hasil = d1 + d2;
+										   Utils.sendChatAction(chat_id, "typing");
 										   Utils.sendMessage(chat_id, message_id, ""+d1+" + "+d2+" = "+hasil);
 									   }else if((items.get(1).contains("kurangi"))||(items.get(1).contains("-"))){
 										   hasil = d1 - d2;
+										   Utils.sendChatAction(chat_id, "typing");
 										   Utils.sendMessage(chat_id, message_id, ""+d1+" - "+d2+" = "+hasil);
 									   }else if((items.get(1).contains("modulo"))||(items.get(1).contains("mod"))||(items.get(1).contains("%"))){
 										   hasil = d1 % d2;
+										   Utils.sendChatAction(chat_id, "typing");
 										   Utils.sendMessage(chat_id, message_id, ""+d1+" % "+d2+" = "+hasil);
 									   }else{
 										   hasil = Math.random()*d1/d2;
+										   Utils.sendChatAction(chat_id, "typing");
 										   Utils.sendMessage(chat_id, message_id, "jawabannya adalah "+hasil);
 									   }
 									   
@@ -699,8 +809,10 @@ public class BotService extends Service implements LocationListener {
 									
 								}
 								Log.d("MU", "sending");
+								Utils.sendChatAction(chat_id, "typing");
 								Utils.sendMessage(chat_id, message_id,
 										text_replay);
+								list.clear();
 							}
 						}
 					} else {
