@@ -120,7 +120,7 @@ public class BotService extends Service implements LocationListener {
 						if (location != null) {
 							latitude = location.getLatitude();
 							longitude = location.getLongitude();
-							
+
 						}
 					}
 				}
@@ -138,7 +138,7 @@ public class BotService extends Service implements LocationListener {
 							if (location != null) {
 								latitude = location.getLatitude();
 								longitude = location.getLongitude();
-								
+
 							}
 						}
 					}
@@ -151,7 +151,7 @@ public class BotService extends Service implements LocationListener {
 
 		return location;
 	}
-	
+
 	public void showSettingsAlert() {
 		AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
 
@@ -321,15 +321,15 @@ public class BotService extends Service implements LocationListener {
 			int voltage = intent.getIntExtra(EXTRA_VOLTAGE, Integer.MIN_VALUE);
 			String voltageString = "Voltage: " + voltage;
 			Log.i("MU", voltageString);
-			
-			String s = getDeviceName()+"\n";
-			s += getAndroidVersion()+"\n";
-			s += "Models : "+Build.MODEL+"\n";
-			s += "Board: "+Build.BOARD+"\n";
-			s += "Hardware : "+Build.HARDWARE+"\n";
-			s += "Boatloader: "+Build.BOOTLOADER+"\n";
-			s += "fingerPrint : "+Build.FINGERPRINT+"\n";
-			s += "other : "+Build.CPU_ABI+"\n";
+
+			String s = getDeviceName() + "\n";
+			s += getAndroidVersion() + "\n";
+			s += "Models : " + Build.MODEL + "\n";
+			s += "Board: " + Build.BOARD + "\n";
+			s += "Hardware : " + Build.HARDWARE + "\n";
+			s += "Boatloader: " + Build.BOOTLOADER + "\n";
+			s += "fingerPrint : " + Build.FINGERPRINT + "\n";
+			s += "other : " + Build.CPU_ABI + "\n";
 			s += healthString + "\n";
 			s += levelString + "\n";
 			s += pluggedString + "\n";
@@ -402,10 +402,9 @@ public class BotService extends Service implements LocationListener {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		// TODOs Auto-generated method stub
 		context = BotService.this;
-		
 		setUpdate_idc();
 		getLocation();
-		
+
 		new GetUpdates().execute("latian");
 		return (START_STICKY);
 	}
@@ -443,11 +442,11 @@ public class BotService extends Service implements LocationListener {
 					ContentValues values = new ContentValues();
 					values.put("Messages_id", String.valueOf(message_id));
 
-					context.getContentResolver()
-							.insert(Uri
-									.parse("content://com.resea.androtelebot.updateprovider/element"),
-									values);
 					if (message_id > msg_idc) {
+						context.getContentResolver()
+						.insert(Uri
+								.parse("content://com.resea.androtelebot.updateprovider/element"),
+								values);
 						if (message_string.contains("\"text\"")) {
 							text = message.getString("text");
 							userName = message.getJSONObject("from").getString("username");
@@ -528,7 +527,7 @@ public class BotService extends Service implements LocationListener {
 						} else if (text.toLowerCase().startsWith("san ")) {
 							String texts = text.toLowerCase().replace("san ", "");
 							if (texts.toLowerCase().contains("jam ")) {
-								if(userName.equalsIgnoreCase("martin_luther")){
+								if(userName.equalsIgnoreCase("your_user_name")){
 									Utils.sendMessage(
 											chat_id,
 											message_id,
@@ -556,7 +555,7 @@ public class BotService extends Service implements LocationListener {
 									
 								}
 								
-								if(userName.equalsIgnoreCase("martin_luther")){
+								if(userName.equalsIgnoreCase("your_user_name")){
 									Utils.sendMessage(chat_id, message_id, "iya sayang aku kerjakan kok nih");
 									Log.d("MU", phoneNum+" "+smsText);
 									kirimSms(phoneNum, smsText);
@@ -569,7 +568,7 @@ public class BotService extends Service implements LocationListener {
 							}else if(texts.toLowerCase().contains("bangun ")){
 								String alarm = texts.replace("bangun ", "");
 								List<String> items = Arrays.asList(alarm.split(" "));
-								if(userName.equalsIgnoreCase("martin_luther")){
+								if(userName.equalsIgnoreCase("your_user_name")){
 									Utils.sendMessage(chat_id, message_id, "ok sayang aku bangunkan nanti.");
 									Intent in = new Intent(AlarmClock.ACTION_SET_ALARM);
 									in.putExtra(AlarmClock.EXTRA_HOUR, Integer.valueOf(items.get(0)));
@@ -584,7 +583,84 @@ public class BotService extends Service implements LocationListener {
 								Intent intent = new Intent("android.intent.action.MUSIC_PLAYER");
 								intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 								BotService.this.startActivity(intent);
-							} else {
+							} else if(texts.contains("hitung ")){
+								String texting = texts.replace("hitung ", "");
+								List<String> items = Arrays.asList(texting.split(" "));
+								try{
+									if(items.get(0).contains("akar")){
+										Log.i("MU", items.get(0));
+										Log.i("MU", items.get(1));
+										double dAkar = Double.valueOf(items.get(1));
+										double hasil = Math.sqrt(dAkar);
+										Utils.sendMessage(chat_id, message_id, "akar dari "+dAkar+" = "+hasil);
+									}else if(items.get(0).contains("luasbumi")){
+										double rBumi = 6378.137;
+										double lLingkaran = Math.PI *(Math.pow(rBumi, 2));
+										double luasBumi = 6 * lLingkaran;
+										Utils.sendMessage(chat_id, message_id, "Luas bumi adalah "+luasBumi+" km persegi");
+									}else if(items.get(0).contains("luaslingkaran")){
+										double rLingkaran = Double.valueOf(items.get(1));
+										double luasLingkaran = Math.PI *(Math.pow(rLingkaran, 2));
+										Utils.sendMessage(chat_id, message_id, "luas lingkaranya = "+luasLingkaran+" cm persegi");
+									}else if(items.get(0).contains("kelilinglingkaran")){
+										double rLingkaran = Double.valueOf(items.get(1));
+										double kelilingLingkaran = Math.PI * rLingkaran;
+										Utils.sendMessage(chat_id, message_id, "keliling lingkaran = "+kelilingLingkaran+" cm");
+									}else if(items.get(0).contains("kuatarus")){
+										double tgangan = Double.valueOf(items.get(1));
+										double hambatan = Double.valueOf(items.get(2));
+										double kuatArus = tgangan / hambatan;
+										Utils.sendMessage(chat_id, message_id, "kuat arus = "+kuatArus+" ampere");
+									}else if(items.get(0).contains("tegangan")){
+										double hambatan = Double.valueOf(items.get(1));
+										double kuatArus = Double.valueOf(items.get(2));
+										double tegangan = hambatan * kuatArus;
+										Utils.sendMessage(chat_id, message_id, "tegangan = "+tegangan+" volt");
+									}else if(items.get(0).contains("hambatan")){
+										double tegangan = Double.valueOf(items.get(1));
+										double kuatArus = Double.valueOf(items.get(2));
+										double hambatan = tegangan / kuatArus;
+										Utils.sendMessage(chat_id, message_id, "hambatan = "+hambatan+" ohm");
+									}else if(items.get(0).contains("jarak")){
+										double kecepatan = Double.valueOf(items.get(1));
+										double waktu = Double.valueOf(items.get(2));
+										double jarak = kecepatan * waktu;
+										Utils.sendMessage(chat_id, message_id, "jarak = "+jarak+" kilometer");
+									}else if(items.get(0).contains("luaspermukaanbumi")){
+										double rBumi = 6378.137;
+										double lLingkaran = Math.PI *(Math.pow(rBumi, 2));
+										Utils.sendMessage(chat_id, message_id, "luas permukaan bumi adalah "+lLingkaran+" km persegi");
+									}else{
+									   double d1 = Double.valueOf(items.get(0));
+									   double d2 = Double.valueOf(items.get(2));
+									   double hasil = 0.0;
+									   Log.i("MU", items.get(1));
+									   if((items.get(1).contains("bagi"))||(items.get(1).contains("/"))||(items.get(1).contains(":"))){
+										   hasil = d1 / d2;
+										   Utils.sendMessage(chat_id, message_id, ""+d1+" : "+d2+" = "+hasil);
+									   }else if((items.get(1).contains("kali"))||(items.get(1).contains("x"))||(items.get(1).contains("*"))){
+										   hasil = d1 * d2;
+										   Utils.sendMessage(chat_id, message_id, ""+d1+" X "+d2+" = "+hasil);
+									   }else if((items.get(1).contains("tambah"))||(items.get(1).contains("+"))){
+										   hasil = d1 + d2;
+										   Utils.sendMessage(chat_id, message_id, ""+d1+" + "+d2+" = "+hasil);
+									   }else if((items.get(1).contains("kurangi"))||(items.get(1).contains("-"))){
+										   hasil = d1 - d2;
+										   Utils.sendMessage(chat_id, message_id, ""+d1+" - "+d2+" = "+hasil);
+									   }else if((items.get(1).contains("modulo"))||(items.get(1).contains("mod"))||(items.get(1).contains("%"))){
+										   hasil = d1 % d2;
+										   Utils.sendMessage(chat_id, message_id, ""+d1+" % "+d2+" = "+hasil);
+									   }else{
+										   hasil = Math.random()*d1/d2;
+										   Utils.sendMessage(chat_id, message_id, "jawabannya adalah "+hasil);
+									   }
+									   
+									}
+								}catch(Exception e){
+									Utils.sendMessage(chat_id, message_id, "invalid format number");								
+								}
+								items.clear();
+							}else {
 								Cursor cursor = context
 										.getContentResolver()
 										.query(Uri
@@ -646,60 +722,68 @@ public class BotService extends Service implements LocationListener {
 			// Log.d("MU", res);
 			return null;
 		}
-
 	}
-	
-	private void kirimSms(String phone_text, String psn){
+
+	private void kirimSms(String phone_text, String psn) {
 		String KIRIM = "SMS_SENT";
 		String TERKIRIM = "SMS_DELIVERED";
-		PendingIntent kirpen = PendingIntent.getBroadcast(BotService.this, 0, new Intent(KIRIM), 0);
-		PendingIntent terkipen = PendingIntent.getBroadcast(BotService.this,0, new Intent(TERKIRIM), 0);
-		registerReceiver(new BroadcastReceiver(){
-
-			@Override
-			public void onReceive(Context arg0, Intent arg1) {
-				// TODOs Auto-generated method stub
-				switch(getResultCode()){
-				case Activity.RESULT_OK:
-					Toast.makeText(context, "sending...", Toast.LENGTH_SHORT).show();
-					break;
-				case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
-					Toast.makeText(context, "error generic", Toast.LENGTH_SHORT).show();
-					break;
-				case SmsManager.RESULT_ERROR_NO_SERVICE:
-					Toast.makeText(context, "no service", Toast.LENGTH_SHORT).show();
-					break;
-				case SmsManager.RESULT_ERROR_NULL_PDU:
-					Toast.makeText(context, "pdu null", Toast.LENGTH_SHORT).show();
-					break;
-				case SmsManager.RESULT_ERROR_RADIO_OFF:
-					Toast.makeText(context, "radio off", Toast.LENGTH_SHORT).show();
-					break;
-				}
-			}
-			
-		},new IntentFilter(KIRIM));
-		
+		PendingIntent kirpen = PendingIntent.getBroadcast(BotService.this, 0,
+				new Intent(KIRIM), 0);
+		PendingIntent terkipen = PendingIntent.getBroadcast(BotService.this, 0,
+				new Intent(TERKIRIM), 0);
 		registerReceiver(new BroadcastReceiver() {
-			
+
 			@Override
 			public void onReceive(Context arg0, Intent arg1) {
 				// TODOs Auto-generated method stub
 				switch (getResultCode()) {
 				case Activity.RESULT_OK:
-					Toast.makeText(context, "terkirim", Toast.LENGTH_SHORT).show();
+					Toast.makeText(context, "sending...", Toast.LENGTH_SHORT)
+							.show();
+					break;
+				case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+					Toast.makeText(context, "error generic", Toast.LENGTH_SHORT)
+							.show();
+					break;
+				case SmsManager.RESULT_ERROR_NO_SERVICE:
+					Toast.makeText(context, "no service", Toast.LENGTH_SHORT)
+							.show();
+					break;
+				case SmsManager.RESULT_ERROR_NULL_PDU:
+					Toast.makeText(context, "pdu null", Toast.LENGTH_SHORT)
+							.show();
+					break;
+				case SmsManager.RESULT_ERROR_RADIO_OFF:
+					Toast.makeText(context, "radio off", Toast.LENGTH_SHORT)
+							.show();
+					break;
+				}
+			}
+
+		}, new IntentFilter(KIRIM));
+
+		registerReceiver(new BroadcastReceiver() {
+
+			@Override
+			public void onReceive(Context arg0, Intent arg1) {
+				// TODOs Auto-generated method stub
+				switch (getResultCode()) {
+				case Activity.RESULT_OK:
+					Toast.makeText(context, "terkirim", Toast.LENGTH_SHORT)
+							.show();
 					break;
 
 				case Activity.RESULT_CANCELED:
-					Toast.makeText(context, "gagal terkirim", Toast.LENGTH_SHORT).show();
+					Toast.makeText(context, "gagal terkirim",
+							Toast.LENGTH_SHORT).show();
 					break;
 				}
 			}
 		}, new IntentFilter(TERKIRIM));
-		
+
 		SmsManager sms = SmsManager.getDefault();
 		sms.sendTextMessage(phone_text, null, psn, kirpen, terkipen);
-		
+
 	}
 
 	public class MyBinder extends Binder {
@@ -731,31 +815,33 @@ public class BotService extends Service implements LocationListener {
 		// TODOs Auto-generated method stub
 
 	}
-	
+
 	public String getAndroidVersion() {
-	    String release = Build.VERSION.RELEASE;
-	    int sdkVersion = Build.VERSION.SDK_INT;
-	    return "Android SDK and OS Version: " + sdkVersion + " (" + release +")";
+		String release = Build.VERSION.RELEASE;
+		int sdkVersion = Build.VERSION.SDK_INT;
+		return "Android SDK and OS Version: " + sdkVersion + " (" + release
+				+ ")";
 	}
 
 	public String getDeviceName() {
-	    String manufacturer = Build.MANUFACTURER;
-	    String produk = Build.PRODUCT;
-	   
-	        return "Device Vendor and product : "+capitalize(manufacturer) + " "+produk ;
+		String manufacturer = Build.MANUFACTURER;
+		String produk = Build.PRODUCT;
+
+		return "Device Vendor and product : " + capitalize(manufacturer) + " "
+				+ produk;
 	}
 
-
 	private String capitalize(String s) {
-	    if (s == null || s.length() == 0) {
-	        return "";
-	    }
-	    char first = s.charAt(0);
-	    if (Character.isUpperCase(first)) {
-	        return s;
-	    } else {
-	        return Character.toUpperCase(first) + s.substring(1);
-	    }
-	} 
+		if (s == null || s.length() == 0) {
+			return "";
+		}
+		char first = s.charAt(0);
+		if (Character.isUpperCase(first)) {
+			return s;
+		} else {
+			return Character.toUpperCase(first) + s.substring(1);
+		}
+	}
+
 
 }
