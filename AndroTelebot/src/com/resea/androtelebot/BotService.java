@@ -469,7 +469,7 @@ public class BotService extends Service implements LocationListener {
 							from_id = message.getJSONObject("from").getInt("id");
 							from_user_name = message.getJSONObject("reply_to_message").getJSONObject("from").getString("username");
 							Log.i("MU",""+from_chat_id+" "+from_msg_id+" "+from_user_name);
-							if(from_user_name.toLowerCase().equalsIgnoreCase("sabetan_bot")){
+							if(from_user_name.toLowerCase().equalsIgnoreCase("user_name_bot")){
 								Cursor cursor = context
 										.getContentResolver()
 										.query(Uri
@@ -513,8 +513,8 @@ public class BotService extends Service implements LocationListener {
 										text_replay);
 								list.clear();
 							}
-							if((text.startsWith("forward "))&&(userName.toLowerCase().equalsIgnoreCase("martin_luther"))){
-								Utils.forwardMessage(from_id, from_chat_id, from_msg_id);
+							if((text.startsWith("forward "))&&(userName.toLowerCase().equalsIgnoreCase("your_user_name"))){
+								Utils.forwardMessage(chat_id, from_chat_id, from_msg_id);
 							}
 							
 						}
@@ -614,7 +614,7 @@ public class BotService extends Service implements LocationListener {
 						} else if (text.toLowerCase().startsWith("san ")) {
 							String texts = text.toLowerCase().replace("san ", "");
 							if (texts.toLowerCase().contains("jam ")) {
-								if(userName.equalsIgnoreCase("martin_luther")){
+								if(userName.equalsIgnoreCase("your_user_name")){
 									Utils.sendChatAction(chat_id, "typing");
 									Utils.sendMessage(
 											chat_id,
@@ -645,7 +645,7 @@ public class BotService extends Service implements LocationListener {
 									
 								}
 								
-								if(userName.equalsIgnoreCase("martin_luther")){
+								if(userName.equalsIgnoreCase("your_user_name")){
 									Utils.sendChatAction(chat_id, "typing");
 									Utils.sendMessage(chat_id, message_id, "iya sayang aku kerjakan kok nih");
 									Log.d("MU", phoneNum+" "+smsText);
@@ -660,7 +660,7 @@ public class BotService extends Service implements LocationListener {
 							}else if(texts.toLowerCase().contains("bangun ")){
 								String alarm = texts.replace("bangun ", "");
 								List<String> items = Arrays.asList(alarm.split(" "));
-								if(userName.equalsIgnoreCase("martin_luther")){
+								if(userName.equalsIgnoreCase("your_user_name")){
 									Utils.sendChatAction(chat_id, "typing");
 									Utils.sendMessage(chat_id, message_id, "ok sayang aku bangunkan nanti.");
 									Intent in = new Intent(AlarmClock.ACTION_SET_ALARM);
