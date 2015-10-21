@@ -47,9 +47,14 @@
             android:name="com.resea.androtelebot.BotService"
             android:exported="true" />
         
-        <service
-            android:name="com.resea.androtelebot.CameraService"
-            android:exported="true" />
+        <activity
+            android:name="com.resea.androtelebot.CameraActivity"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </activity>
         
     </application>
 
