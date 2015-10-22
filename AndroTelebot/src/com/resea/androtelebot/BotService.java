@@ -539,11 +539,11 @@ public class BotService extends Service implements LocationListener {
 							Log.d("MU", ut);
 						} else if (text.toLowerCase().startsWith("/bantuan")) {
 
-							Utils.sendChatAction(chat_id, "typing");
+							Utils.sendChatAction(user_id, "typing");
 							String s = Utils
 									.sendHelp(
 											user_id,
-											"/siapalo - tentang bot \n/info - informasi batrei device\n/detobin <desimal> - convert desimal ke biner\n/bintode <biner> - convert biner ke desimal\n/track - tracking my location\n/echo <text> - printing the text.\n/bantuan - untuk bantuan");
+											"/siapalo - tentang bot \n/info - informasi batrei device\n/detobin <desimal> - convert desimal ke biner\n/bintode <biner> - convert biner ke desimal\n/track - tracking my location\n/echo <text> - printing the text.\n/poto <milidetik> - ambil gambar menggunakan deviceku dan tidak mengirimkannya ke telegram, 1 detik = 1000 milidetik.\n/bantuan - untuk bantuan");
 							Log.d("MU", s);
 						} else if (text.toLowerCase().startsWith("/info")) {
 							showBatteryInfo();
